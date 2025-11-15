@@ -56,6 +56,13 @@
                     </DataGrid.Columns>
                 </DataGrid>
 
+                <GridSplitter Grid.Column="1"
+                              Width="5"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Background="Transparent"
+                              ShowsPreview="True" />
+
                 <Grid Grid.Column="2">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>

@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Data;
 using OcelotEditor.Models;
 
 namespace OcelotEditor.ViewModels;
@@ -19,6 +21,9 @@ public class RouteViewModel : ObservableObject, IDataErrorInfo
     private string _downstreamScheme = "http";
     private bool _routeIsCaseSensitive;
     private HostAndPortViewModel? _selectedHost;
+    private readonly ICollectionView _hostsView;
+    private string _hostFilterText = string.Empty;
+    private string _portFilterText = string.Empty;
 
     public RouteViewModel(Route? model = null, IEnumerable<string>? httpMethodOptions = null)
     {
@@ -36,6 +41,8 @@ public class RouteViewModel : ObservableObject, IDataErrorInfo
         }
 
         DownstreamHostAndPorts.CollectionChanged += OnHostsCollectionChanged;
+        _hostsView = CollectionViewSource.GetDefaultView(DownstreamHostAndPorts);
+        _hostsView.Filter = HostFilter;
         AuthenticationOptions.OptionsChanged += (_, __) => OnRouteChanged();
 
         AddHostCommand = new RelayCommand(AddHost);
@@ -59,6 +66,8 @@ public class RouteViewModel : ObservableObject, IDataErrorInfo
     public ObservableCollection<HttpMethodOptionViewModel> HttpMethodOptions { get; }
 
     public ObservableCollection<HostAndPortViewModel> DownstreamHostAndPorts { get; } = new();
+
+    public ICollectionView HostsView => _hostsView;
 
     public AuthenticationOptionsViewModel AuthenticationOptions { get; } = new();
 
@@ -124,6 +133,30 @@ public class RouteViewModel : ObservableObject, IDataErrorInfo
             if (SetProperty(ref _selectedHost, value))
             {
                 RemoveSelectedHostCommand.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public string HostFilterText
+    {
+        get => _hostFilterText;
+        set
+        {
+            if (SetProperty(ref _hostFilterText, value))
+            {
+                _hostsView.Refresh();
+            }
+        }
+    }
+
+    public string PortFilterText
+    {
+        get => _portFilterText;
+        set
+        {
+            if (SetProperty(ref _portFilterText, value))
+            {
+                _hostsView.Refresh();
             }
         }
     }
@@ -297,5 +330,21 @@ public class RouteViewModel : ObservableObject, IDataErrorInfo
     private void OnRouteChanged()
     {
         RouteChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool HostFilter(object obj)
+    {
+        if (obj is not HostAndPortViewModel host)
+        {
+            return false;
+        }
+
+        var matchesHost = string.IsNullOrWhiteSpace(HostFilterText)
+            || host.Host.Contains(HostFilterText, StringComparison.OrdinalIgnoreCase);
+
+        var matchesPort = string.IsNullOrWhiteSpace(PortFilterText)
+            || host.Port.ToString().Contains(PortFilterText, StringComparison.OrdinalIgnoreCase);
+
+        return matchesHost && matchesPort;
     }
 }

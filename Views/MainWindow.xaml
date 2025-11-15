@@ -85,15 +85,42 @@
                                             <Button Content="Add Host" Command="{Binding SelectedRoute.AddHostCommand}" Margin="0,0,8,0" />
                                             <Button Content="Remove Selected" Command="{Binding SelectedRoute.RemoveSelectedHostCommand}" />
                                         </StackPanel>
-                                        <DataGrid ItemsSource="{Binding SelectedRoute.DownstreamHostAndPorts}"
+                                        <DataGrid ItemsSource="{Binding SelectedRoute.HostsView}"
                                                   SelectedItem="{Binding SelectedRoute.SelectedHost, Mode=TwoWay}"
                                                   AutoGenerateColumns="False"
-                                                  CanUserAddRows="False">
+                                                  CanUserAddRows="False"
+                                                  IsReadOnly="False">
                                             <DataGrid.Columns>
                                                 <DataGridTextColumn Header="Host"
-                                                                   Binding="{Binding Host, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="*" />
+                                                                   SortMemberPath="Host"
+                                                                   Binding="{Binding Host, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="*">
+                                                    <DataGridTextColumn.HeaderTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel>
+                                                                <TextBlock Text="{Binding}" FontWeight="SemiBold" />
+                                                                <TextBox Margin="0,4,0,0"
+                                                                         Width="Auto"
+                                                                         ToolTip="Filter hosts"
+                                                                         Text="{Binding DataContext.SelectedRoute.HostFilterText, RelativeSource={RelativeSource AncestorType=DataGrid}, UpdateSourceTrigger=PropertyChanged}" />
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </DataGridTextColumn.HeaderTemplate>
+                                                </DataGridTextColumn>
                                                 <DataGridTextColumn Header="Port"
-                                                                   Binding="{Binding Port, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="*" />
+                                                                   SortMemberPath="Port"
+                                                                   Binding="{Binding Port, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="*">
+                                                    <DataGridTextColumn.HeaderTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel>
+                                                                <TextBlock Text="{Binding}" FontWeight="SemiBold" />
+                                                                <TextBox Margin="0,4,0,0"
+                                                                         Width="Auto"
+                                                                         ToolTip="Filter ports"
+                                                                         Text="{Binding DataContext.SelectedRoute.PortFilterText, RelativeSource={RelativeSource AncestorType=DataGrid}, UpdateSourceTrigger=PropertyChanged}" />
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </DataGridTextColumn.HeaderTemplate>
+                                                </DataGridTextColumn>
                                             </DataGrid.Columns>
                                         </DataGrid>
                                     </DockPanel>

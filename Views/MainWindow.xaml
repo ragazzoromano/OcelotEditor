@@ -43,15 +43,39 @@
                 </Grid.ColumnDefinitions>
 
                 <DataGrid Grid.Column="0"
-                      ItemsSource="{Binding Routes}"
+                      ItemsSource="{Binding RoutesView}"
                       SelectedItem="{Binding SelectedRoute, Mode=TwoWay}"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       SelectionMode="Single"
                       Margin="0,0,8,0">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Upstream" Binding="{Binding UpstreamPathTemplate}" Width="*" />
-                        <DataGridTextColumn Header="Downstream" Binding="{Binding DownstreamPathTemplate}" Width="*" />
+                        <DataGridTextColumn Header="Upstream" Binding="{Binding UpstreamPathTemplate}" Width="*">
+                            <DataGridTextColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding}" FontWeight="SemiBold" />
+                                        <TextBox Margin="0,4,0,0"
+                                                 Width="Auto"
+                                                 ToolTip="Filter upstream routes"
+                                                 Text="{Binding DataContext.RouteUpstreamFilterText, RelativeSource={RelativeSource AncestorType=DataGrid}, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTextColumn.HeaderTemplate>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Downstream" Binding="{Binding DownstreamPathTemplate}" Width="*">
+                            <DataGridTextColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding}" FontWeight="SemiBold" />
+                                        <TextBox Margin="0,4,0,0"
+                                                 Width="Auto"
+                                                 ToolTip="Filter downstream routes"
+                                                 Text="{Binding DataContext.RouteDownstreamFilterText, RelativeSource={RelativeSource AncestorType=DataGrid}, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTextColumn.HeaderTemplate>
+                        </DataGridTextColumn>
                         <DataGridTextColumn Header="Host" Binding="{Binding PrimaryHostSummary}" Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Windows.Data;
 using OcelotEditor.Models;
 using OcelotEditor.Services;
 
@@ -15,11 +16,14 @@ public class MainViewModel : ObservableObject
     private readonly IFileDialogService _fileDialogService;
     private readonly IMessageDialogService _messageDialogService;
 
+    private readonly ICollectionView _routesView;
     private RouteViewModel? _selectedRoute;
     private string? _currentFilePath;
     private string _statusMessage = "Ready";
     private bool _hasUnsavedChanges;
     private bool _suppressChangeTracking;
+    private string _routeUpstreamFilterText = string.Empty;
+    private string _routeDownstreamFilterText = string.Empty;
 
     public MainViewModel(IConfigurationService configurationService,
         IFileDialogService fileDialogService,
@@ -30,6 +34,8 @@ public class MainViewModel : ObservableObject
         _messageDialogService = messageDialogService;
 
         Routes.CollectionChanged += OnRoutesCollectionChanged;
+        _routesView = CollectionViewSource.GetDefaultView(Routes);
+        _routesView.Filter = RouteFilter;
         GlobalConfiguration.ConfigurationChanged += (_, __) => MarkDirty();
 
         OpenCommand = new RelayCommand(Open);
@@ -48,6 +54,8 @@ public class MainViewModel : ObservableObject
     }
 
     public ObservableCollection<RouteViewModel> Routes { get; } = new();
+
+    public ICollectionView RoutesView => _routesView;
 
     public GlobalConfigurationViewModel GlobalConfiguration { get; } = new();
 
@@ -84,6 +92,30 @@ public class MainViewModel : ObservableObject
         private set => SetProperty(ref _hasUnsavedChanges, value);
     }
 
+    public string RouteUpstreamFilterText
+    {
+        get => _routeUpstreamFilterText;
+        set
+        {
+            if (SetProperty(ref _routeUpstreamFilterText, value))
+            {
+                _routesView.Refresh();
+            }
+        }
+    }
+
+    public string RouteDownstreamFilterText
+    {
+        get => _routeDownstreamFilterText;
+        set
+        {
+            if (SetProperty(ref _routeDownstreamFilterText, value))
+            {
+                _routesView.Refresh();
+            }
+        }
+    }
+
     public RelayCommand OpenCommand { get; }
     public RelayCommand SaveCommand { get; }
     public RelayCommand SaveAsCommand { get; }
@@ -118,10 +150,15 @@ public class MainViewModel : ObservableObject
 
         MoveRouteUpCommand.RaiseCanExecuteChanged();
         MoveRouteDownCommand.RaiseCanExecuteChanged();
+        _routesView.Refresh();
         MarkDirty();
     }
 
-    private void RouteChanged(object? sender, EventArgs e) => MarkDirty();
+    private void RouteChanged(object? sender, EventArgs e)
+    {
+        _routesView.Refresh();
+        MarkDirty();
+    }
 
     private void MarkDirty()
     {
@@ -331,6 +368,7 @@ public class MainViewModel : ObservableObject
         _suppressChangeTracking = false;
         HasUnsavedChanges = false;
         SelectedRoute = Routes.FirstOrDefault();
+        _routesView.Refresh();
     }
 
     private void DetachAllRoutes()
@@ -351,5 +389,23 @@ public class MainViewModel : ObservableObject
                 BaseUrl = GlobalConfiguration.BaseUrl
             }
         };
+    }
+
+    private bool RouteFilter(object obj)
+    {
+        if (obj is not RouteViewModel route)
+        {
+            return false;
+        }
+
+        var matchesUpstream = string.IsNullOrWhiteSpace(RouteUpstreamFilterText)
+            || (!string.IsNullOrEmpty(route.UpstreamPathTemplate)
+                && route.UpstreamPathTemplate.Contains(RouteUpstreamFilterText, StringComparison.OrdinalIgnoreCase));
+
+        var matchesDownstream = string.IsNullOrWhiteSpace(RouteDownstreamFilterText)
+            || (!string.IsNullOrEmpty(route.DownstreamPathTemplate)
+                && route.DownstreamPathTemplate.Contains(RouteDownstreamFilterText, StringComparison.OrdinalIgnoreCase));
+
+        return matchesUpstream && matchesDownstream;
     }
 }

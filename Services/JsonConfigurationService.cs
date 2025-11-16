@@ -42,10 +42,10 @@ public class JsonConfigurationService : IConfigurationService
     {
         try
         {
-            using var document = JsonDocument.Parse(json, DocumentOptions);
-            return JsonSerializer.Serialize(document.RootElement, NormalizationSerializerOptions);
+            using var document = System.Text.Json.JsonDocument.Parse(json, DocumentOptions);
+            return System.Text.Json.JsonSerializer.Serialize(document.RootElement, NormalizationSerializerOptions);
         }
-        catch (JsonException)
+        catch (System.Text.Json.JsonException)
         {
             return json;
         }
